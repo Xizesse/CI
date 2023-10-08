@@ -27,6 +27,7 @@ int unit_id = 3;
 
 int main () {
     int result;
+    int a;
     int val[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     int response[10] = {0};
     result = Write_multiple_regs("127.0.0.1", 502, 1, 9, val); 
