@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <arpa/inet.h> 
 #include <unistd.h>
+#include <errno.h>
 
 #include "ModbusTCP.h"
 
@@ -66,6 +67,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     printf("Opening TCP client socket and connecting to server\n ");
     #endif
 
+
     int sock, len;
     struct sockaddr_in serv;
     socklen_t addlen = sizeof(serv); 
@@ -86,6 +88,23 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     
     
     //------------------------connects to server
+
+    struct timeval timeout;
+    timeout.tv_sec = 3; //seconds
+    timeout.tv_usec = 15; //microseconds
+    //setsockopt is a function that sets options for a socket
+    //SO_RCVTIMEO sets the timeout value for receiving data for the socket
+    //SOL_SOCKET is the level aw which the option is defined
+
+    if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
+    {
+    
+        perror("setsockopt failed\n");
+        close (sock);
+        return -1;
+    }
+
+
     if(connect(sock, (struct sockaddr *) &serv, addlen) < 0) {
         perror("connect");
         close (sock);
@@ -119,15 +138,27 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     //read(fd, PDU_R, PDU_Rlen); //response or timeout
  
     //TODO passar isto para um loop (mais para o fim)
-    //TODO casos de erro
-
     recv_bytes = recv(sock, PDU_R, BUF_LEN, 0);
+    
+    if (recv_bytes < 0) {
+        #ifdef DEBUG
+        if (errno == EAGAIN || errno == EWOULDBLOCK) 
+            printf("timeout occurred\n");
+        
+        else
+            perror("recv");
+        #endif
+        return -1;
+       }
+    else
+        printf("received %d bytes\n", recv_bytes);
+    
+
     PDU_Rlen = recv_bytes;
     //buffer de leitura
     //do while ?
 
     #ifdef DEBUG
-    printf("recv_bytes = %d\n", recv_bytes);
     printf("PDU_R = ");
     for (int i = 0; i < recv_bytes; i++)
     {
@@ -146,13 +177,11 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     //1 byte function code
     //2 bytes start address
     //2 bytes num reg
-    //TODO casos de erro
-
-
     
+
     for (int i = 0; i < PDU_Rlen; i++)
     {
-        APDU_R[i] = PDU_R[7 + i];
+        APDU_R[i] = (uint8_t)PDU_R[7 + i];
     }
     APDU_Rlen = PDU_Rlen - 7;
 
@@ -168,9 +197,9 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     #endif
 
     
-    //closes TCP client socket with server
+    //------------------------closes TCP client socket with server
     close(sock);
-    //returns APDU_R and 0-ok or -1-error(timeout)
+    //------------------------returns APDU_R and 0-ok or -1-error(timeout)
     return 0;
 }
 

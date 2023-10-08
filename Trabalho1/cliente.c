@@ -27,9 +27,17 @@ int unit_id = 3;
 
 int main () {
     int result;
-    int val[9] = {1, 2, 0xFFFF, 4, 5, 6, 7, 8, 9};
-    result = Write_multiple_regs("127.0.0.1", 502, 1, 9, val); // nao pode 
+    int val[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int response[10] = {0};
+    result = Write_multiple_regs("127.0.0.1", 502, 1, 9, val); 
     printf("result = %d\n", result);
-    //result = Read_h_regs("127.0.0.1", 502, 5, 2, val);;
+    printf("\n\n\n");
+
+    result = Read_h_regs("127.0.0.1", 502, 1, 9, response);
+    printf("result = %d\n", result);
+    for (int i = 0; i < 10; i++)
+    {
+        printf("Register %d = %d\n", i+1, response[i]);
+    }
     return 0; 
 }
