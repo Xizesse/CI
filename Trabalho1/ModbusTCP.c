@@ -9,7 +9,6 @@
 
 #include "ModbusTCP.h"
 
-#define MODBUS_PORT 502
 #define BUF_LEN 256
 //#define DEBUG
 
@@ -52,7 +51,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     PDU[4] = ((1+APDUlen)>>8) & 0xFF; // Lenght high byte
     PDU[5] = (1+APDUlen) & 0xFF; // Lenght low byte
 
-    PDU[6] = unit_id;
+    PDU[6] = unit_id; //definido como global no cliente
 
     //!------------------------copy APDU to MBAPDU
     for (int i = 0; i < APDUlen; i++)
@@ -73,18 +72,23 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     socklen_t addlen = sizeof(serv); 
     
     sock = socket(PF_INET, SOCK_STREAM, 0);
+    
     if (sock < 0) {
+        #ifdef DEBUG
         perror("socket");
+        #endif
         close (sock);
         return -50;
     }
     else {
+        #ifdef DEBUG
         printf("socket opened\n");
+        #endif
     }
 
     serv.sin_family = AF_INET; 
-    serv.sin_port = htons(port); 
-    inet_aton(server_add, &serv.sin_addr); //!
+    serv.sin_port = htons(port); //converts port to network byte order
+    inet_aton(server_add, &serv.sin_addr); //converte str to binary address in network byte order
     
     
     //!------------------------connects to server
@@ -98,8 +102,9 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
 
     if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
     {
-    
+        #ifdef DEBUG
         perror("setsockopt failed\n");
+        #endif
         close (sock);
         return -50;
     }
@@ -110,23 +115,31 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     #endif
 
     if(connect(sock, (struct sockaddr *) &serv, addlen) < 0) {
+        #ifdef DEBUG
         perror("connect");
+        #endif
         close (sock);
         return -50;
     }
     else {
+        #ifdef DEBUG
         printf("connected to server\n");
+        #endif
     }
 
     //!------------------------sends PDU to server
     sent_bytes = send(sock, PDU, PDUlen, 0);
     if (sent_bytes< 0) { 
+        #ifdef DEBUG
         perror("send");
+        #endif
         close (sock);
         return -50;
     }
     else {
+        #ifdef DEBUG
         printf("sent %d bytes\n", sent_bytes);
+        #endif
     }
     #ifdef DEBUG
     printf("PDU = ");
@@ -154,7 +167,9 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
         return -50;
        }
     else
+        #ifdef DEBUG
         printf("received %d bytes\n", recv_bytes);
+        #endif
     
 
     PDU_Rlen = recv_bytes;
