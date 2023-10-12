@@ -41,17 +41,22 @@ int main () {
 
     int response[10] = {0};
     //char *server_add = "10.227.145.228";
-    //char * server_add = "10.227.113.081";
+    //char * server_add = "10.227.103.44";
     char * server_add = "127.0.0.1";
     result = Write_multiple_regs(server_add, 502, 1, 15, val); 
-    printf("result = %d\n", result);
-    printf("X = %d\n", resultToX(result));
+    //printf("result = %d\n", result);
+    printf("result = %d\n", resultToX(result));
+    printf("\n\n\n");
+
+    result = Write_multiple_regs(server_add, 502, 1, 9, val); 
+    //printf("result = %d\n", result);
+    printf("result = %d\n", resultToX(result));
     printf("\n\n\n");
 
 
     result = Read_h_regs(server_add, 502, 1, 9, response);
-    printf("result = %d\n", result);
-    printf("X = %d\n", resultToX(result));
+    //printf("result = %d\n", result);
+    printf("result = %d\n", resultToX(result));
 
     for (int i = 0; i < 10; i++)
     {

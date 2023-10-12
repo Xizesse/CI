@@ -32,7 +32,7 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid port\n");
         #endif
-        return -1;
+        return -50;
     }
 
 
@@ -43,7 +43,7 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid starting register\n");
         #endif
-        return -1;
+        return -50;
     }
 
     //hmm check number of registers
@@ -54,7 +54,7 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid number of registers\n");
         #endif
-        return -1;
+        return -50;
     }
     //hmm values for 2byte registers (65535 = 0xFFFF)
     for (int i = 0; i < n_r; i++)
@@ -64,7 +64,7 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
             #ifdef DEBUG
             printf("Invalid values\n");
             #endif
-            return -1;
+            return -50;
         }
     }
     
