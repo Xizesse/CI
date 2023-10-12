@@ -23,35 +23,53 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
     uint8_t APDU_R[BUF_LEN];
     st_r --; // para bater certo com o que eu fiz para a baixo disto
 
-    //---------- checking consistency of input
-    //check starting register
+    //!---------- checking consistency of input
+    //TODO check address
+
+    //hmm check port
+    if (port < 0 || port > 65535)
+    {
+        #ifdef DEBUG
+        printf("Invalid port\n");
+        #endif
+        return -1;
+    }
+
+
+    //hmm check starting register
     //está zero porque já decrementei
     if (st_r < 0 || st_r > 65535)
     {
+        #ifdef DEBUG
         printf("Invalid starting register\n");
+        #endif
         return -1;
     }
 
-    //check number of registers
-    //Addressable Elements acording to MODBUSchapter 1-123
+    //hmm check number of registers
+    //Addressable Elements acording to MODBUSchapter 1-123 (Writing)
 
     if (n_r < 0 || n_r > 123)
     {
+        #ifdef DEBUG
         printf("Invalid number of registers\n");
+        #endif
         return -1;
     }
-    //values for 2byte registers (65535 = 0xFFFF)
+    //hmm values for 2byte registers (65535 = 0xFFFF)
     for (int i = 0; i < n_r; i++)
     {
         if (val[i] < 0 || val[i] > 65535)
         {
+            #ifdef DEBUG
             printf("Invalid values\n");
+            #endif
             return -1;
         }
     }
     
 
-    //------------------------build APDU
+    //!------------------------build APDU
     #ifdef DEBUG
     printf("Building APDU\n");
     #endif
@@ -77,7 +95,6 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
 
     #ifdef DEBUG
     printf("APDU BUILT\n");
-    //print the apdu in a line
     for (int i = 0; i < APDUlen; i++)
     {
         printf("%02X ", APDU[i]);
@@ -85,50 +102,37 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
     printf("\n");
     #endif
 
-    int result = Send_Modbus_request("127.0.0.1", 502, APDU, APDUlen, APDU_R);
+    int result = Send_Modbus_request(server_add, port, APDU, APDUlen, APDU_R);
 
-    //---------- checking the response
-    //se tiver erro, o APDU_R[0] vai ser 0x90
+
+    //!---------- checking the response
+    //se tiver erro do Modbus, o APDU_R[0] vai ser 0x90
     
-    #ifdef DEBUG
-    //print the apdu_r in a line
-    if(APDU_R[0] == 0x90)
-    {
-        printf("Detetou erro do servidor\n");
-        printf("APDU_R: ");
-        for (int i = 0; i < 2; i++)
-        {
-            printf("%02X ", APDU_R[i]);
-        }
-    }
-    else
-    {
-        printf("APDU_R: ");
-        for (int i = 0; i < 5; i++)
-        {
-            printf("%02X ", APDU_R[i]);
-        }
-        printf("\n");
-    }
-    #endif
-
     if (result < 0)
     {   
         #ifdef DEBUG
-        printf("Error sending request\n");
+        printf("Modbus internal error\n");
+        
         #endif
-        return -1;
+        return -50;
     }
-    else if (APDU_R[0] != 16)
+    else if (APDU_R[0] == APDU[0] + 0x80) //se receber o de erro
     {
         #ifdef DEBUG
-        printf("Error in response\n");
+        printf("Exception code\n");
         #endif
+        if (APDU_R[1] == 1)
         return -1;
+        else if (APDU_R[1] == 2)
+        return -2;
+        else if (APDU_R[1] == 3)
+        return -3;
+        else if (APDU_R[1] == 4)
+        return -4;
+        else return -50;
     }
-    
 
-    //------------returns the number of written registers or negative if error
+    //!------------returns the number of written registers or negative if error
 
     return APDU_R[3] << 8 | APDU_R[4];
 
@@ -145,20 +149,35 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
     st_r --; // para bater certo com o que eu fiz para a baixo disto
 
     //!---------- checking consistency of input
-    //check starting register
-    //está zero porque já decrementei
-    if (st_r < 0 || st_r > 65535)
+    //TODO check address
+
+    //hmm check port
+    if (port < 0 || port > 65535)
     {
-        printf("Invalid starting register\n");
+        #ifdef DEBUG
+        printf("Invalid port\n");
+        #endif
         return -1;
     }
 
-    //check number of registers
-    //Addressable Elements acording to MODBUSchapter 1-123
+    //hmm check starting register
+    //está zero porque já decrementei
+    if (st_r < 0 || st_r > 65535)
+    {
+        #ifdef DEBUG
+        printf("Invalid starting register\n");
+        #endif
+        return -1;
+    }
+
+    //hmm check number of registers
+    //Addressable Elements acording to MODBUSchapter 1-125 (Read)
 
     if (n_r < 0 || n_r > 125) //para o read já é 125
     {
+        #ifdef DEBUG
         printf("Invalid number of registers\n");
+        #endif
         return -1;
     }
     
@@ -169,20 +188,18 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
     #endif
     
     APDU[0] = 0x03;	//function code - 16 = write multiple registers
-    //Start address
+    //hmm Start address
     APDU[1] = st_r >> 8 & 0xFF;
     APDU[2] = st_r & 0xFF;
-    //num reg
+    //hmm num reg
     APDU[3] = n_r >> 8 & 0xFF;
     APDU[4] = n_r & 0xFF;
-    //byte count
-    
+    //hmm byte count
     APDUlen = 5;
     APDU_Rlen = 3 + 2*n_r;
 
     #ifdef DEBUG
     printf("APDU BUILT\n");
-    //print the apdu in a line
     for (int i = 0; i < APDUlen; i++)
     {
         printf("%02X ", APDU[i]);
@@ -190,47 +207,42 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
     printf("\n");
     #endif
 
-    int result = Send_Modbus_request("127.0.0.1", 502, APDU, APDUlen, APDU_R);
+    //! ------- Send_Modbus_request
+    int result = Send_Modbus_request(server_add, port, APDU, APDUlen, APDU_R);
 
     
     //!---------- checking the response
-    //se tiver erro, o APDU_R[0] vai ser 0x83
     
     if (result < 0)
     {   
         #ifdef DEBUG
-        printf("Error sending request\n");
+        printf("Modbus internal error\n");
         #endif
-        return -1;
+        return -50;
     }
-    else if (APDU_R[0] != 3)
+    else if (APDU_R[0] == APDU[0] + 0x80) //se receber o de erro
     {
         #ifdef DEBUG
-        printf("Returned Wrong FC\n");
+        printf("Exception code\n");
         #endif
+        if (APDU_R[1] == 1)
         return -1;
+        else if (APDU_R[1] == 2)
+        return -2;
+        else if (APDU_R[1] == 3)
+        return -3;
+        else if (APDU_R[1] == 4)
+        return -4;
+        else return -50;
     }
-
-    #ifdef DEBUG
-    //print the apdu_r in a line
-    printf("APDU_R: ");
-    for (int i = 0; i < APDU_Rlen; i++)
-    {
-        printf("%02X ", APDU_R[i]);
-    }
-    printf("\n");
-    #endif
-    
     //!---------- copy the values to the array
     for (int i = 0; i < n_r; i++)
     {
-        val[i] = APDU_R[3 + 2*i] << 8 | APDU_R[4 + 2*i];
+        val[i] = APDU_R[2 + 2*i] << 8 | APDU_R[3 + 2*i];
     }
     
-    
 
-
-    //------------returns the number of read registers or negative if error
+    //!------------returns the number of read registers or negative if error
 
     return APDU_R[2];
 

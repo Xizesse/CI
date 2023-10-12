@@ -1,1 +1,6 @@
-commit not working 
+
+TODO
+- Erros certos
+- Ver que parametros faltam verificar
+- Verificar mais parametros 
+- prints passam todos para ifdef DEBUG

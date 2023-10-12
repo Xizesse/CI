@@ -31,14 +31,14 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     static int TI = 0; //transaction identifier
     extern int unit_id; //unit identifier
     
-    //generate TI
+    //!-----------------------generate TI
     #ifdef DEBUG
     printf("Generating TI\n ");
     #endif
     TI++;
     
 
-    //------------------------assempble APDU
+    //!------------------------assempble APDU
     #ifdef DEBUG
     printf("Assembling APDU\n ");
     #endif
@@ -54,7 +54,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
 
     PDU[6] = unit_id;
 
-    //------------------------copy APDU to MBAPDU
+    //!------------------------copy APDU to MBAPDU
     for (int i = 0; i < APDUlen; i++)
     {
         PDU[7 + i] = APDU[i];
@@ -62,7 +62,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
 
     PDUlen = 7 + APDUlen;
 
-    //------------------------open TCP client socket and connects to server
+    //!------------------------open TCP client socket and connects to server
     #ifdef DEBUG
     printf("Opening TCP client socket and connecting to server\n ");
     #endif
@@ -87,7 +87,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     inet_aton(server_add, &serv.sin_addr); //!
     
     
-    //------------------------connects to server
+    //!------------------------connects to server
 
     struct timeval timeout;
     timeout.tv_sec = 3; //seconds
@@ -114,7 +114,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
         printf("connected to server\n");
     }
 
-    //------------------------sends PDU to server
+    //!------------------------sends PDU to server
     sent_bytes = send(sock, PDU, PDUlen, 0);
     if (sent_bytes< 0) { 
         perror("send");
@@ -134,9 +134,8 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     #endif
 
 
-    //-----------------reads response from server
-    //read(fd, PDU_R, PDU_Rlen); //response or timeout
- 
+    //!-----------------reads response from server
+     
     //TODO passar isto para um loop (mais para o fim)
     recv_bytes = recv(sock, PDU_R, BUF_LEN, 0);
     
@@ -167,7 +166,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     printf("\n");
     #endif
 
-    //------------------------if response, remove MBAP and PDU_R -> APDU_R
+    //!------------------------if response, remove MBAP and PDU_R -> APDU_R
     //00 01(TI) 00 00() 00 06 00 10 00 00 00 05
     //2 bytes TI
     //2 bytes Protocol ID
@@ -197,9 +196,9 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     #endif
 
     
-    //------------------------closes TCP client socket with server
+    //!------------------------closes TCP client socket with server
     close(sock);
-    //------------------------returns APDU_R and 0-ok or -1-error(timeout)
+    //!------------------------returns APDU_R and 0-ok or -1-error(timeout)
     return 0;
 }
 
