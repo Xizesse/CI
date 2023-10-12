@@ -116,20 +116,16 @@ int Write_multiple_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #endif
         return -50;
     }
-    else if (APDU_R[0] == APDU[0] + 0x80) //se receber o de erro
+
+    //erro do Modbus
+    else if (APDU_R[0] == APDU[0] + 0x80) //se receber o de erro do Modbus
     {
         #ifdef DEBUG
-        printf("Exception code\n");
+        printf("Exception code: %02X\n", APDU_R[1]);
+
         #endif
-        if (APDU_R[1] == 1)
-        return -1;
-        else if (APDU_R[1] == 2)
-        return -2;
-        else if (APDU_R[1] == 3)
-        return -3;
-        else if (APDU_R[1] == 4)
-        return -4;
-        else return -50;
+        return -(int)APDU_R[1]; //return Modbus erro 
+
     }
 
     //!------------returns the number of written registers or negative if error
@@ -157,7 +153,7 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid port\n");
         #endif
-        return -1;
+        return -50;
     }
 
     //hmm check starting register
@@ -167,7 +163,7 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid starting register\n");
         #endif
-        return -1;
+        return -50;
     }
 
     //hmm check number of registers
@@ -178,7 +174,7 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
         #ifdef DEBUG
         printf("Invalid number of registers\n");
         #endif
-        return -1;
+        return -50;
     }
     
 
@@ -222,18 +218,14 @@ int Read_h_regs(char* server_add, int port, int st_r, int n_r, int *val)
     }
     else if (APDU_R[0] == APDU[0] + 0x80) //se receber o de erro
     {
+
+
         #ifdef DEBUG
-        printf("Exception code\n");
+        printf("Exception code: %02X\n", APDU_R[1]);
+
         #endif
-        if (APDU_R[1] == 1)
-        return -1;
-        else if (APDU_R[1] == 2)
-        return -2;
-        else if (APDU_R[1] == 3)
-        return -3;
-        else if (APDU_R[1] == 4)
-        return -4;
-        else return -50;
+        return -(int)APDU_R[1];
+
     }
     //!---------- copy the values to the array
     for (int i = 0; i < n_r; i++)

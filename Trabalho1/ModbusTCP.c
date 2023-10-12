@@ -11,7 +11,7 @@
 
 #define MODBUS_PORT 502
 #define BUF_LEN 256
-#define DEBUG
+//#define DEBUG
 
 int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, char* APDU_R)
 {
@@ -76,14 +76,14 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     if (sock < 0) {
         perror("socket");
         close (sock);
-        return -1;
+        return -50;
     }
     else {
         printf("socket opened\n");
     }
 
     serv.sin_family = AF_INET; 
-    serv.sin_port = htons(MODBUS_PORT); 
+    serv.sin_port = htons(port); 
     inet_aton(server_add, &serv.sin_addr); //!
     
     
@@ -101,14 +101,18 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     
         perror("setsockopt failed\n");
         close (sock);
-        return -1;
+        return -50;
     }
 
+    #ifdef DEBUG
+    //print the address connecting to 
+    printf("Connecting to %s\n", server_add);
+    #endif
 
     if(connect(sock, (struct sockaddr *) &serv, addlen) < 0) {
         perror("connect");
         close (sock);
-        return -1;
+        return -50;
     }
     else {
         printf("connected to server\n");
@@ -119,7 +123,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
     if (sent_bytes< 0) { 
         perror("send");
         close (sock);
-        return -1;
+        return -50;
     }
     else {
         printf("sent %d bytes\n", sent_bytes);
@@ -147,7 +151,7 @@ int Send_Modbus_request(char* server_add, int port, uint8_t* APDU, int APDUlen, 
         else
             perror("recv");
         #endif
-        return -1;
+        return -50;
        }
     else
         printf("received %d bytes\n", recv_bytes);
