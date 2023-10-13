@@ -6,7 +6,7 @@
 
 //#define DEBUG
 
-int unit_id = 51;
+int unit_id = 1;
 
 //Avaliação : Exame teórico + Exame prático
 //2 turnos práticos e um turno teórico no bloco B
@@ -52,7 +52,7 @@ int main () {
 
 
     //char *server_add = "10.227.145.228";
-    //char * server_add = "10.227.103.44";
+    //char * server_add = "10.227.103.165";
     char * server_add = "127.0.0.1";
 
     result = Write_multiple_regs(server_add, 502, 1, 15, val); 
